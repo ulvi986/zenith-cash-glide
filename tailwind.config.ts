@@ -22,6 +22,7 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          glow: "hsl(var(--primary-glow))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -62,6 +63,17 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      backgroundImage: {
+        'payment-gradient': 'var(--payment-gradient)',
+        'glass': 'linear-gradient(135deg, hsl(var(--glass-bg)), hsl(var(--glass-bg)))',
+      },
+      boxShadow: {
+        'payment-glow': 'var(--payment-glow)',
+        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+      },
+      backdropBlur: {
+        'glass': '8px',
       },
       keyframes: {
         "accordion-down": {
