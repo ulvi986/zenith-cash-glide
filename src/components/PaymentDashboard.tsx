@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ServicesSection } from '@/components/ServicesSection';
 import { PaymentModal } from '@/components/PaymentModal';
 import { ArrowUpRight, ArrowDownRight, CreditCard, TrendingUp, Users, DollarSign } from 'lucide-react';
 
@@ -158,9 +159,12 @@ export function PaymentDashboard() {
                 </p>
               </CardContent>
             </Card>
-          </div>
         </div>
       </div>
+
+      {/* Services Section */}
+      <ServicesSection />
+    </div>
     </div>
   );
 }
