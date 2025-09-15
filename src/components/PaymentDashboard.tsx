@@ -1,8 +1,11 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ServicesSection } from '@/components/ServicesSection';
+import { MobileNavigation } from '@/components/MobileNavigation';
+import { MobileHero } from '@/components/MobileHero';
 import { PaymentModal } from '@/components/PaymentModal';
 import { ArrowUpRight, ArrowDownRight, CreditCard, TrendingUp, Users, DollarSign } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const RECENT_TRANSACTIONS = [
   { id: 1, type: 'income', amount: 2400, description: 'Payment received', time: '2 hours ago' },
@@ -19,27 +22,33 @@ const STATS = [
 ];
 
 export function PaymentDashboard() {
+  const isMobile = useIsMobile();
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden bg-payment-gradient">
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="relative px-6 py-16 mx-auto max-w-7xl sm:py-24">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
-              Modern Payment
-              <span className="block text-primary-glow">System</span>
-            </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/80">
-              Experience the future of payments with our secure, fast, and user-friendly platform.
-              Process transactions seamlessly across all devices.
-            </p>
-            <div className="flex items-center justify-center mt-10">
-              <PaymentModal />
+    <div className={`min-h-screen bg-background ${isMobile ? 'pb-20' : ''}`}>
+      {/* Hero Section - Mobile optimized */}
+      <MobileHero />
+      
+      {/* Desktop Hero Section */}
+      {!isMobile && (
+        <div className="relative overflow-hidden bg-payment-gradient">
+          <div className="absolute inset-0 bg-black/20" />
+          <div className="relative px-6 py-16 mx-auto max-w-7xl sm:py-24">
+            <div className="text-center">
+              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
+                Modern Payment
+                <span className="block text-primary-glow">System</span>
+              </h1>
+              <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/80">
+                Experience the future of payments with our secure, fast, and user-friendly platform.
+                Process transactions seamlessly across all devices.
+              </p>
+              <div className="flex items-center justify-center mt-10">
+                <PaymentModal />
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Stats Section */}
       <div className="px-6 py-16 mx-auto max-w-7xl">
@@ -164,6 +173,9 @@ export function PaymentDashboard() {
 
       {/* Services Section */}
       <ServicesSection />
+
+      {/* Mobile Navigation */}
+      <MobileNavigation />
     </div>
     </div>
   );

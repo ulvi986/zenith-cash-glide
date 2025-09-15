@@ -110,4 +110,16 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Mobile-specific styles */
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Enhanced mobile scrolling */
+  @media (max-width: 768px) {
+    .overflow-y-auto {
+      -webkit-overflow-scrolling: touch;
+    }
+  }
 }
