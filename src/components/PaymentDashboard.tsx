@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ServicesSection } from '@/components/ServicesSection';
 import { MobileNavigation } from '@/components/MobileNavigation';
 import { MobileHero } from '@/components/MobileHero';
 import { PaymentModal } from '@/components/PaymentModal';
-import { ArrowUpRight, ArrowDownRight, CreditCard, TrendingUp, Users, DollarSign } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, CreditCard, TrendingUp, Users, DollarSign, User, LogOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AuthModal } from './AuthModal';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const RECENT_TRANSACTIONS = [
@@ -22,11 +24,64 @@ const STATS = [
 ];
 
 export function PaymentDashboard() {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [user, setUser] = useState<{ email: string; fullName: string } | null>(null);
   const isMobile = useIsMobile();
+
+  const handleAuthSuccess = (userData: { email: string; fullName: string }) => {
+    setUser(userData);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+  };
   return (
     <div className={`min-h-screen bg-background ${isMobile ? 'pb-20' : ''}`}>
+      {/* Header with Auth */}
+      {!isMobile && (
+        <div className="bg-card/50 border-b border-border/50 backdrop-blur-sm">
+          <div className="px-6 py-4 mx-auto max-w-7xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+                  FinPay
+                </h1>
+              </div>
+              <div className="flex items-center space-x-2">
+                {user ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="text-right">
+                      <p className="text-sm font-medium">{user.fullName}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleLogout}
+                      className="border-destructive/20 text-destructive hover:bg-destructive/10"
+                    >
+                      <LogOut className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setIsAuthModalOpen(true)}
+                    className="border-primary/20 text-primary hover:bg-primary/10"
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Sign In
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Hero Section - Mobile optimized */}
-      <MobileHero />
+      <MobileHero user={user} onAuthClick={() => setIsAuthModalOpen(true)} onLogout={handleLogout} />
       
       {/* Desktop Hero Section */}
       {!isMobile && (
@@ -168,15 +223,22 @@ export function PaymentDashboard() {
                 </p>
               </CardContent>
             </Card>
+          </div>
         </div>
-      </div>
 
-      {/* Services Section */}
-      <ServicesSection />
+        {/* Services Section */}
+        <ServicesSection />
+      </div>
 
       {/* Mobile Navigation */}
       <MobileNavigation />
-    </div>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onAuthSuccess={handleAuthSuccess}
+      />
     </div>
   );
 }
