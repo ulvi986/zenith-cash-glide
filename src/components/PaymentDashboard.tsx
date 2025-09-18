@@ -7,6 +7,8 @@ import { PaymentModal } from '@/components/PaymentModal';
 import { ArrowUpRight, ArrowDownRight, CreditCard, TrendingUp, Users, DollarSign, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AuthModal } from './AuthModal';
+import { AIVoiceButton } from './AIVoiceButton';
+import { AIChatbot } from './AIChatbot';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const RECENT_TRANSACTIONS = [
@@ -232,6 +234,10 @@ export function PaymentDashboard() {
 
       {/* Mobile Navigation */}
       <MobileNavigation />
+
+      {/* AI Features */}
+      <AIVoiceButton />
+      <AIChatbot />
 
       {/* Auth Modal */}
       <AuthModal 
