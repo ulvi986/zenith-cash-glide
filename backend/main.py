@@ -1,429 +1,371 @@
-#region libraries
-from flask import Flask, jsonify, request,send_file
-import pyttsx3
-from flask_cors import CORS
-from microservices.signup import register_user
-from microservices.getdbconnection import get_db_connection
-import logging
-import time
-import speech_recognition as sr
-import gtts as  gTTS
-import io
-import pygame
-from pydub import AudioSegment
-import tempfile
-import speech_recognition as sr
-from gtts import gTTS
-import io
-import tempfile
-import soundfile as sf
-import numpy as np
-import os
-#endregion
-
-
-
-#region debugging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-#endregion
-
-
-
-
-#region Cors for all ports
-app = Flask(__name__)
-app.secret_key = 'Experiment_Reforger'
-
-# CORS konfiqurasiyası
-CORS(app, 
-     origins=["http://localhost:8080"], 
-     supports_credentials=True,
-     allow_headers=["Content-Type"],
-     methods=["POST", "OPTIONS"])
-
-#endregion
-
-myglobaluserid =  None
-myglobalgmail = None
-myglobalCartBalance = None
-myglobalcardnumber = None
-
-
-#region signup
-@app.route("/signup", methods=["POST"])
-def signup():
-    try:
-        data = request.get_json()
-        
-        if not data:
-            return jsonify({"message": "No data provided"}), 400
-        
-        fullName = data.get("fullName")
-        email = data.get("email")
-        password = data.get("password")
-        
-        # Validation
-        if not fullName or not email or not password:
-            return jsonify({"message": "All fields are required"}), 400
-        
-
-        conn = get_db_connection()
-        
-
-
-        if not conn:
-            return "Database connection error", 500
-        try:
-            fullName = data.get("fullName")
-            email = data.get("email")
-            password = data.get("password")
-
-            register_user(conn, fullName, email, password)
-            cur = conn.cursor()
-            cur.execute("SELECT user_id  FROM signup_login_system WHERE gmail = %s", (email,))
-            userid = cur.fetchone()
-            global myglobaluserid
-            myglobaluserid = userid[0]
-            global myglobalgmail   
-            myglobalgmail = email
-            return jsonify({"message": "User registered successfully"}), 201
-        except Exception as e:
-            logger.error(f"Registration failed: {e}")
-            return "Registration failed", 500
-        finally:
-            conn.close()
-
-        
-        
-    except Exception as e:
-        print(f"Error: {e}")
-        return jsonify({"message": "Server error occurred"}), 500
-
-#endregion
-
-#region login
-@app.route("/login", methods=["GET","POST"])
-def login():
-    data = request.get_json()
-    if not data:
-        return jsonify({"message": "No data provided"}), 400
-    
-    email = data.get("email")
-    password = data.get("password")
-    global myglobalgmail   
-    myglobalgmail = email
-
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({"message": "Database connection error"}), 500
-
-    try:
-        cur = conn.cursor()
-        cur.execute(
-            "SELECT user_id,gmail, password FROM signup_login_system WHERE gmail = %s",
-            (email,)
-        )
-        
-        row = cur.fetchone()
-        cur.close()
-        conn.close()
-
-        print(row)
-
-        if row is None:
-            return jsonify({"message": "User not found"}), 404
-        
-        global myglobaluserid
-        myglobaluserid,db_email, db_password = row
-        print("userid:",myglobaluserid)
-        if password == db_password:
-            return jsonify({
-                "status": "success",
-                "message": "Login successful",
-                "email": db_email
-            }), 200
-        else:
-            return jsonify({
-                "status": "error",
-                "message": "Invalid password"
-            }), 401
-
-    except Exception as e:
-        logger.error(f"Login failed: {e}")
-        return jsonify({"message": "Login failed"}), 500
-
-#endregion
-
-#region informationaboutuser
-@app.route("/api/informationaboutuser", methods=["GET"])
-def informationaboutuser():
-    email = request.args.get("email")  # GET query param
-    if not email:
-        return jsonify({"message": "No email provided"}), 400
-
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({"message": "Database connection error"}), 500
-
-    try:
-        cur = conn.cursor()
-        cur.execute("SELECT cartbalance FROM budge WHERE gmail = %s", (email,))
-        row = cur.fetchone()
-        cur.close()
-        conn.close()
-        total_revenue = str(row[0]) if row and row[0] else "0.00"
-        global myglobalCartBalance
-        myglobalCartBalance = total_revenue
-        return jsonify({"total_revenue": total_revenue}), 200
-    except Exception as e:
-        logger.error(f"Fetching user info failed: {e}")
-        return jsonify({"message": "Fetching user info failed"}), 500
-
-#endregion
-
-#region totaltransactions
-@app.route("/api/totaltransactionsmoney", methods=["GET","POST"])
-def totaltransactionscount():
-    email  = request.args.get("email")  # GET query param
-    amount = request.args.get("amount")
-    if not email:
-        return jsonify({"message": "No email provided"}), 400
-    
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({"message": "Database connection error"}), 500
-    
-    try:
-        cur = conn.cursor()
-        cur.execute("""
-    SELECT SUM(p.amount) AS total_amount
-FROM payments p
-JOIN signup_login_system s ON p.user_id = s.user_id
-WHERE s.gmail = %s;
-""", (email,))
-
-        row = cur.fetchone()
-        cur.close()
-        conn.close()
-        print(row)
-        print("Salam",row[0])
-        totaltransactions = row[0] if row and row[0] else 0
-        print(totaltransactions)
-        print(type(totaltransactions))
-        return jsonify({"totaltransactions": totaltransactions}), 200
-    except Exception as e:
-        logger.error(f"Fetching total transactions failed: {e}")
-        return jsonify({"message": "Fetching total transactions failed"}), 500
-
-
-#endregion
-
-
-#region totaltransactionsnumber
-
-@app.route("/api/totaltransactions", methods=["GET","POST"])
-def totaltransactions():
-    email  = request.args.get("email")  # GET query param
-    if not email:
-        return jsonify({"message": "No email provided"}), 400
-    
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({"message": "Database connection error"}), 500
-    
-    try:
-        cur = conn.cursor()
-        cur.execute("""
-SELECT 
-    COUNT(*) AS total_transactions, 
-    SUM(amount) AS total_amount
-FROM (
-    SELECT amount, user_id FROM payments
-    UNION ALL
-    SELECT amount, user_id FROM privatepayments
-) AS all_payments
-JOIN signup_login_system s ON all_payments.user_id = s.user_id
-WHERE s.user_id = %s;
-""", (myglobaluserid,))
-        
-        row = cur.fetchone()
-        cur.close()
-        conn.close()
-        print(row)
-        totaltransactionscount  = row[0] if row and row[0] else 0
-        print("Tapildi:",totaltransactionscount)
-        print(type(totaltransactionscount))
-        return jsonify({"totaltransactionscount": totaltransactionscount}), 200
-    except Exception as e:
-        logger.error(f"Fetching total transactions failed: {e}")
-        return jsonify({"message": "Fetching total transactions failed"}), 500
-
-#endregion
-
-
-#region carnumber
-@app.route("/api/cardnumber", methods=["GET","POST"])
-def cardnumber():
-    email  = request.args.get("email")  # GET query param
-    if not email:
-        return jsonify({"message": "No email provided"}), 400
-    
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({"message": "Database connection error"}), 500
-    
-    try:
-        cur = conn.cursor()
-        cur.execute("""
-select card_number from budge where gmail = %s
-""", (email,))
-
-        row = cur.fetchone()
-        cur.close()
-        conn.close()
-        print(row)
-        cardnumber  = row[0] if row and row[0] else 0
-        global myglobalcardnumber
-        myglobalcardnumber = cardnumber
-        print("Tapildi:",cardnumber)
-        print(type(cardnumber))
-        return jsonify({"cardnumber": cardnumber}), 200
-    except Exception as e:
-        logger.error(f"Fetching total transactions failed: {e}")
-        return jsonify({"message": "Fetching total transactions failed"}), 500
-
-#endregion
-
-
-
-#region pay(private)
-
-@app.route("/pay", methods=["GET","POST"])
-def pay():
-    cardnumberglobal = myglobalcardnumber
-    data = request.get_json()
-    if not data:
-        return jsonify({"message": "Invalid JSON"}), 400
-    
-    amount = data.get("amount")
-    expiry_data = data.get("expiry_date")
-    cvv = data.get("cvv")
-    cardNumber = data.get("cardNumber")
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({"message": "Database connection error"}), 500
-    
-    try:
-        amount = float(amount)
-        cur = conn.cursor()
-        cur.execute("""
-select cartbalance from budge where card_number = %s
-""", (cardnumberglobal,))
-
-        row = cur.fetchone()
-        cur.close()
-        conn.close()
-        print(row)
-        CartBalance  = row[0] if row and row[0] else 0
-        print("Tapildi Card Balance For Pay:",CartBalance)
-        print(type(CartBalance))
-        if CartBalance >= amount:
-            
-            newbalance = CartBalance - int(amount)
-            conn = get_db_connection()
-            if not conn:
-                return jsonify({"message": "Database connection error"}), 500
-            try:
-                cur = conn.cursor()
-                cur.execute("""
-update budge set cartbalance = %s where card_number = %s
-""", (newbalance,cardnumberglobal,))
-                cur.execute("""
-                            insert into privatepayments (user_id, amount,gmail) values (%s,%s,%s)
-                            """, (myglobaluserid, amount,myglobalgmail))
-                cur.execute("""
-                            update budge set cartbalance = cartbalance + %s where card_number = %s
-                            """, (int(amount),cardNumber))
-                if cur.rowcount == 0:
-                    conn.rollback()
-                    return jsonify({"message": "Recipient card not found"}), 400
-
-                conn.commit()
-                cur.close()
-                conn.close()
-            except Exception as e:
-                logger.error(f"Fetching total transactions failed: {e}")
-                return jsonify({"message": "Fetching total transactions failed"}), 500
-        else:
-                return jsonify({"message": "Payment unsuccessful","newbalance":newbalance}), 200
-        return jsonify({"cartbalance": CartBalance}), 200
-    except Exception as e:
-        logger.error(f"Fetching total transactions failed: {e}")
-        return jsonify({"message": "Fetching total transactions failed"}), 500
-
-
-
-
-
-#endregion
-
-
-
-#region voicechatbot
-@app.route("/api/voicechatbot", methods=["POST"])
-def voicechatbot():
-    try:
-        if 'audio' not in request.files:
-            return jsonify({"error": "No audio file sent"}), 400
-
-        audio_file = request.files['audio']
-
-        # 1️⃣ WebM → WAV çevirmə
-        with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as temp_webm:
-            audio_file.save(temp_webm.name)
-            temp_webm.flush()
-
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_wav:
-            audio = AudioSegment.from_file(temp_webm.name)
-            audio.export(temp_wav.name, format="wav")
-
-        # 2️⃣ Speech recognition
-        recognizer = sr.Recognizer()
-        with sr.AudioFile(temp_wav.name) as source:
-            audio_data = recognizer.record(source)
-            text = recognizer.recognize_google(audio_data, language="en-GB")
-
-        print(f"Tanınan mətn: {text}")
-
-        # 3️⃣ Cavab hazırlamaq
-        response_text = ""
-        if any(cmd in text.lower() for cmd in ["balance", "say balance", "show balance"]):
-            response_text = f"Your balance is {myglobalCartBalance} Azerbaijan manats."
-        elif any(cmd in text.lower() for cmd in ["gmail", "show gmail", "say gmail", "email"]):
-            response_text = f"{myglobalgmail} is your Gmail address."
-
-        elif any(cmd in text.lower() for cmd in ["show card number", "say card number", "card number"]):
-            response_text = f"{myglobalcardnumber} is your card number."
-
-        
-        # 4️⃣ gTTS ilə MP3 yaratmaq
-        if response_text:
-            tts = gTTS(text=response_text, lang='en')
-            temp_mp3 = tempfile.NamedTemporaryFile(suffix=".mp3", delete=False)
-            tts.save(temp_mp3.name)
-            temp_mp3.flush()
-            return send_file(temp_mp3.name, mimetype="audio/mpeg")
-
-        # 5️⃣ Əgər cavab yoxdursa sadəcə mətn göndər
-        return jsonify({"recognized_text": text}), 200
-
-    except sr.UnknownValueError:
-        return jsonify({"error": "Audio not understood"}), 400
-    except Exception as e:
-        print(f"Error: {e}")
-        return jsonify({"error": str(e)}), 500
-#endregion
-if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+import React, { useState,useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ServicesSection } from '@/components/ServicesSection';
+import { MobileNavigation } from '@/components/MobileNavigation';
+import { MobileHero } from '@/components/MobileHero';
+import { PaymentModal } from '@/components/PaymentModal';
+import { ArrowUpRight, ArrowDownRight, CreditCard, TrendingUp, Users, DollarSign, User, LogOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { AuthModal } from './AuthModal';
+import { AIVoiceButton } from './AIVoiceButton';
+import { AIChatbot } from './AIChatbot';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from 'sonner';
+
+const RECENT_TRANSACTIONS = [
+  { id: 1, type: 'income', amount: 2400, description: 'Payment received', time: '2 hours ago' },
+  { id: 2, type: 'expense', amount: 150, description: 'Service fee', time: '5 hours ago' },
+  { id: 3, type: 'income', amount: 890, description: 'Payment received', time: '1 day ago' },
+  { id: 4, type: 'expense', amount: 45, description: 'Transaction fee', time: '2 days ago' },
+];
+
+const STATS = [
+  { title: 'Total Revenue', value: '', change: '', icon: () => <span className="text-lg font-bold">₼</span> },
+  { title: 'Sum of total transactions', value: '', change: '', icon: CreditCard },
+  { title: "Number of Transactions", value: '', change: '8.5%', icon: CreditCard },
+  {title: 'Card Number', value: '', change: '', icon: CreditCard },
+];
+
+export function PaymentDashboard() {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [user, setUser] = useState<{ email: string; fullName: string } | null>(null);
+  const isMobile = useIsMobile();
+  
+
+
+const [stats, setStats] = useState(STATS);
+
+  useEffect(() => {
+  if (user) {
+    // burda API çağırırsan
+    const fetchRevenue = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/informationaboutuser?email=" + user.email);
+        const data = await res.json();
+
+        // stats-ı update edirik
+        setStats((prevStats) =>
+          prevStats.map((stat) =>
+            stat.title === "Total Revenue"
+              ? { ...stat, value: `${data.total_revenue} AZN` }
+              : stat
+          )
+        );
+      } catch (err) {
+        console.error("Revenue götürülmədi:", err);
+      }
+    };
+
+    fetchRevenue();
+    //const intervalId = setInterval(fetchRevenue, 1000); 
+    //return () => clearInterval(intervalId);
+  }
+}, [user]);
+
+useEffect(() => {
+  if (user) {
+    // burda API çağırırsan
+    const fetchTotalTransactions = async () => {
+      try {
+        const transactions = await fetch("http://localhost:5000/api/totaltransactionsmoney?email=" + user.email);
+        const data = await transactions.json();
+
+        // stats-ı update edirik
+        setStats((prevStats) =>
+          prevStats.map((stat) =>
+            stat.title === "Sum of total transactions"
+              ? { ...stat, value: `${data.totaltransactions} AZN` }
+              : stat
+          )
+        );
+      } catch (err) {
+        console.error("Transaction goturulmedi", err);
+      }
+    };
+
+    fetchTotalTransactions();
+    //const intervalId = setInterval(fetchTotalTransactions, 1000); 
+    //return () => clearInterval(intervalId);
+  }
+}, [user]);
+
+
+useEffect(() => {
+  if (user) {
+    // burda API çağırırsan
+    const fetchTotalTransactionsCount = async () => {
+      try {
+        const transactions = await fetch("http://localhost:5000/api/totaltransactions?email=" + user.email);
+        const data = await transactions.json();
+
+        // stats-ı update edirik
+        setStats((prevStats) =>
+          prevStats.map((stat) =>
+            stat.title === "Number of Transactions"
+              ? { ...stat, value: `${data.totaltransactionscount}` }
+              : stat
+          )
+        );
+      } catch (err) {
+        console.error("Transaction goturutransaction sayi tapilmadi", err);
+      }
+    };
+
+    fetchTotalTransactionsCount();
+    //const intervalId = setInterval(fetchTotalTransactionsCount, 1000); 
+    //return () => clearInterval(intervalId);
+  }
+}, [user]);
+
+
+useEffect(() => {
+  if (user) {
+    // burda API çağırırsan
+    const fetchCardNumber = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/cardnumber?email=" + user.email);
+        const data = await res.json();
+
+        // stats-ı update edirik
+        setStats((prevStats) =>
+          prevStats.map((stat) =>
+            stat.title === "Card Number"
+              ? { ...stat, value: `${data.cardnumber}` }
+              : stat
+          )
+        );
+      } catch (err) {
+        console.error("Didnt find card number:", err);
+      }
+    };
+
+    fetchCardNumber();
+  }
+}, [user]);
+
+  const handleAuthSuccess = (userData: { email: string; fullName: string }) => {
+    setUser(userData);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+  };
+  return (
+    <div className={`min-h-screen bg-background ${isMobile ? 'pb-20' : ''}`}>
+      {/* Header with Auth */}
+      {!isMobile && (
+        <div className="bg-card/50 border-b border-border/50 backdrop-blur-sm">
+          <div className="px-6 py-4 mx-auto max-w-7xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+                  Reforger
+                </h1>
+              </div>
+              <div className="flex items-center space-x-2">
+                {user ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="text-right">
+                      <p className="text-sm font-medium">{user.fullName}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleLogout}
+                      className="border-destructive/20 text-destructive hover:bg-destructive/10"
+                    >
+                      <LogOut className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setIsAuthModalOpen(true)}
+                    className="border-primary/20 text-primary hover:bg-primary/10"
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Sign In
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hero Section - Mobile optimized */}
+      {/* Hero Section */}
+      {isMobile ? (
+        <MobileHero 
+          user={user}
+          onAuthClick={() => setIsAuthModalOpen(true)}
+          onLogout={handleLogout}
+        />
+      ) : (
+        <div className="relative overflow-hidden bg-payment-gradient">
+          <div className="absolute inset-0 bg-black/20" />
+          <div className="relative px-6 py-16 mx-auto max-w-7xl sm:py-24">
+            <div className="text-center">
+              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
+                Modern Payment
+                <span className="block text-primary-glow">Reforger</span>
+              </h1>
+              <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/80">
+                Experience the future of payments with our secure, fast, and user-friendly platform.
+                Process transactions seamlessly across all devices.
+              </p>
+              <div className="flex items-center justify-center mt-10">
+                <PaymentModal />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      
+      
+     
+
+      {/* Stats Section */}
+      <div className="px-6 py-16 mx-auto max-w-7xl">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {stats.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <Card key={index} className="bg-card/50 border-border/50 backdrop-blur-sm">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    {stat.title}
+                  </CardTitle>
+                  <Icon className="w-4 h-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+                  <p className="text-xs text-green-400 flex items-center mt-1">
+                    <ArrowUpRight className="w-3 h-3 mr-1" />
+                    {stat.change} from last month
+                  </p>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Recent Transactions */}
+        <div className="mt-16">
+          <Card className="bg-card/50 border-border/50 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold text-foreground">Recent Transactions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {RECENT_TRANSACTIONS.map((transaction) => (
+                  <div
+                    key={transaction.id}
+                    className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border/30"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={`p-2 rounded-full ${
+                        transaction.type === 'income' 
+                          ? 'bg-green-500/20 text-green-400' 
+                          : 'bg-red-500/20 text-red-400'
+                      }`}>
+                        {transaction.type === 'income' ? (
+                          <ArrowDownRight className="w-4 h-4" />
+                        ) : (
+                          <ArrowUpRight className="w-4 h-4" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">{transaction.description}</p>
+                        <p className="text-sm text-muted-foreground">{transaction.time}</p>
+                      </div>
+                    </div>
+                    <div className={`font-semibold ${
+                      transaction.type === 'income' ? 'text-green-400' : 'text-red-400'
+                    }`}>
+                      {transaction.type === 'income' ? '+' : '-'}${transaction.amount}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Features Section */}
+        <div className="mt-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-foreground">Why Choose Our Platform?</h2>
+            <p className="mt-4 text-lg text-muted-foreground">
+              Built with security, speed, and user experience in mind
+            </p>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-3">
+            <Card className="bg-card/50 border-border/50 backdrop-blur-sm">
+              <CardHeader>
+                <div className="w-12 h-12 bg-payment-gradient rounded-lg flex items-center justify-center shadow-payment-glow">
+                  <CreditCard className="w-6 h-6 text-white" />
+                </div>
+                <CardTitle className="text-xl text-foreground">Secure Payments</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  End-to-end encryption ensures your payment data is always protected with industry-leading security standards.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card/50 border-border/50 backdrop-blur-sm">
+              <CardHeader>
+                <div className="w-12 h-12 bg-payment-gradient rounded-lg flex items-center justify-center shadow-payment-glow">
+                  <TrendingUp className="w-6 h-6 text-white" />
+                </div>
+                <CardTitle className="text-xl text-foreground">Real-time Analytics</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Monitor your transactions and revenue in real-time with comprehensive analytics and reporting tools.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card/50 border-border/50 backdrop-blur-sm">
+              <CardHeader>
+                <div className="w-12 h-12 bg-payment-gradient rounded-lg flex items-center justify-center shadow-payment-glow">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <CardTitle className="text-xl text-foreground">Global Reach</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Accept payments from customers worldwide with support for multiple currencies and payment methods.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Services Section */}
+        <ServicesSection />
+      </div>
+
+      {/* Mobile Navigation */}
+      <MobileNavigation />
+
+      {/* AI Features */}
+      <AIVoiceButton />
+      <AIChatbot />
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onAuthSuccess={handleAuthSuccess}
+      />
+    </div>
+  );
+}
