@@ -196,10 +196,14 @@ useEffect(() => {
       )}
 
       {/* Hero Section - Mobile optimized */}
-      
-      
-      {/* Desktop Hero Section */}
-      {!isMobile && (
+      {/* Hero Section */}
+      {isMobile ? (
+        <MobileHero 
+          user={user}
+          onAuthClick={() => setIsAuthModalOpen(true)}
+          onLogout={handleLogout}
+        />
+      ) : (
         <div className="relative overflow-hidden bg-payment-gradient">
           <div className="absolute inset-0 bg-black/20" />
           <div className="relative px-6 py-16 mx-auto max-w-7xl sm:py-24">
@@ -219,6 +223,10 @@ useEffect(() => {
           </div>
         </div>
       )}
+
+      
+      
+     
 
       {/* Stats Section */}
       <div className="px-6 py-16 mx-auto max-w-7xl">
