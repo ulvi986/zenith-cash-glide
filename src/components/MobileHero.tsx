@@ -51,7 +51,7 @@ export function MobileHero({ user, onAuthClick, onLogout }: MobileHeroProps) {
           {isMobile && (
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-                FinPay
+                Reforger
               </h1>
               <div className="flex items-center space-x-2">
                 {user ? (
