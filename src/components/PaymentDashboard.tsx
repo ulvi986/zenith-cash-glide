@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ServicesSection } from '@/components/ServicesSection';
 import { MobileNavigation } from '@/components/MobileNavigation';
@@ -10,6 +10,7 @@ import { AuthModal } from './AuthModal';
 import { AIVoiceButton } from './AIVoiceButton';
 import { AIChatbot } from './AIChatbot';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from 'sonner';
 
 const RECENT_TRANSACTIONS = [
   { id: 1, type: 'income', amount: 2400, description: 'Payment received', time: '2 hours ago' },
@@ -19,16 +20,128 @@ const RECENT_TRANSACTIONS = [
 ];
 
 const STATS = [
-  { title: 'Total Revenue', value: '$12,345', change: '+12.5%', icon: DollarSign },
-  { title: 'Active Users', value: '1,234', change: '+5.2%', icon: Users },
-  { title: 'Conversion Rate', value: '3.2%', change: '+0.8%', icon: TrendingUp },
-  { title: 'Total Transactions', value: '567', change: '+8.1%', icon: CreditCard },
+  { title: 'Total Revenue', value: '', change: '', icon: () => <span className="text-lg font-bold">₼</span> },
+  { title: 'Sum of total transactions', value: '', change: '', icon: CreditCard },
+  { title: "Number of Transactions", value: '', change: '8.5%', icon: CreditCard },
+  {title: 'Card Number', value: '1234 5678 9012 3456', change: '', icon: CreditCard },
 ];
 
 export function PaymentDashboard() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [user, setUser] = useState<{ email: string; fullName: string } | null>(null);
   const isMobile = useIsMobile();
+  
+
+
+const [stats, setStats] = useState(STATS);
+
+  useEffect(() => {
+  if (user) {
+    // burda API çağırırsan
+    const fetchRevenue = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/informationaboutuser?email=" + user.email);
+        const data = await res.json();
+
+        // stats-ı update edirik
+        setStats((prevStats) =>
+          prevStats.map((stat) =>
+            stat.title === "Total Revenue"
+              ? { ...stat, value: `${data.total_revenue} AZN` }
+              : stat
+          )
+        );
+      } catch (err) {
+        console.error("Revenue götürülmədi:", err);
+      }
+    };
+
+    fetchRevenue();
+    //const intervalId = setInterval(fetchRevenue, 1000); 
+    //return () => clearInterval(intervalId);
+  }
+}, [user]);
+
+useEffect(() => {
+  if (user) {
+    // burda API çağırırsan
+    const fetchTotalTransactions = async () => {
+      try {
+        const transactions = await fetch("http://localhost:5000/api/totaltransactionsmoney?email=" + user.email);
+        const data = await transactions.json();
+
+        // stats-ı update edirik
+        setStats((prevStats) =>
+          prevStats.map((stat) =>
+            stat.title === "Sum of total transactions"
+              ? { ...stat, value: `${data.totaltransactions} AZN` }
+              : stat
+          )
+        );
+      } catch (err) {
+        console.error("Transaction goturulmedi", err);
+      }
+    };
+
+    fetchTotalTransactions();
+    //const intervalId = setInterval(fetchTotalTransactions, 1000); 
+    //return () => clearInterval(intervalId);
+  }
+}, [user]);
+
+
+useEffect(() => {
+  if (user) {
+    // burda API çağırırsan
+    const fetchTotalTransactionsCount = async () => {
+      try {
+        const transactions = await fetch("http://localhost:5000/api/totaltransactions?email=" + user.email);
+        const data = await transactions.json();
+
+        // stats-ı update edirik
+        setStats((prevStats) =>
+          prevStats.map((stat) =>
+            stat.title === "Number of Transactions"
+              ? { ...stat, value: `${data.totaltransactionscount}` }
+              : stat
+          )
+        );
+      } catch (err) {
+        console.error("Transaction goturutransaction sayi tapilmadi", err);
+      }
+    };
+
+    fetchTotalTransactionsCount();
+    //const intervalId = setInterval(fetchTotalTransactionsCount, 1000); 
+    //return () => clearInterval(intervalId);
+  }
+}, [user]);
+
+
+useEffect(() => {
+  if (user) {
+    // burda API çağırırsan
+    const fetchCardNumber = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/cardnumber?email=" + user.email);
+        const data = await res.json();
+
+        // stats-ı update edirik
+        setStats((prevStats) =>
+          prevStats.map((stat) =>
+            stat.title === "Card Number"
+              ? { ...stat, value: `${data.cardnumber}` }
+              : stat
+          )
+        );
+      } catch (err) {
+        console.error("Didnt find card number:", err);
+      }
+    };
+
+    fetchCardNumber();
+  }
+}, [user]);
 
   const handleAuthSuccess = (userData: { email: string; fullName: string }) => {
     setUser(userData);
@@ -46,7 +159,7 @@ export function PaymentDashboard() {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-                  FinPay
+                  Reforger
                 </h1>
               </div>
               <div className="flex items-center space-x-2">
@@ -83,7 +196,7 @@ export function PaymentDashboard() {
       )}
 
       {/* Hero Section - Mobile optimized */}
-      <MobileHero user={user} onAuthClick={() => setIsAuthModalOpen(true)} onLogout={handleLogout} />
+      
       
       {/* Desktop Hero Section */}
       {!isMobile && (
@@ -93,7 +206,7 @@ export function PaymentDashboard() {
             <div className="text-center">
               <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
                 Modern Payment
-                <span className="block text-primary-glow">System</span>
+                <span className="block text-primary-glow">Reforger</span>
               </h1>
               <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/80">
                 Experience the future of payments with our secure, fast, and user-friendly platform.
@@ -110,7 +223,7 @@ export function PaymentDashboard() {
       {/* Stats Section */}
       <div className="px-6 py-16 mx-auto max-w-7xl">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {STATS.map((stat, index) => {
+          {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
               <Card key={index} className="bg-card/50 border-border/50 backdrop-blur-sm">
