@@ -23,7 +23,7 @@ const STATS = [
   { title: 'Total Revenue', value: '', change: '', icon: () => <span className="text-lg font-bold">₼</span> },
   { title: 'Sum of total transactions', value: '', change: '', icon: CreditCard },
   { title: "Number of Transactions", value: '', change: '8.5%', icon: CreditCard },
-  {title: 'Card Number', value: '1234 5678 9012 3456', change: '', icon: CreditCard },
+  {title: 'Card Number', value: '', change: '', icon: CreditCard },
 ];
 
 export function PaymentDashboard() {
