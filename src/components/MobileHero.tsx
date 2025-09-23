@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { PaymentModal } from './PaymentModal';
 import { Smartphone, CreditCard, TrendingUp, Shield, Zap, Globe, User, LogOut } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import reforgerLogo from '@/assets/reforger-logo.png';
 
 interface MobileHeroProps {
   user?: { email: string; fullName: string } | null;
@@ -50,9 +51,11 @@ export function MobileHero({ user, onAuthClick, onLogout }: MobileHeroProps) {
           {/* Mobile Auth Header */}
           {isMobile && (
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-                Reforger
-              </h1>
+              <img 
+                src={reforgerLogo} 
+                alt="Reforger" 
+                className="h-8 w-auto"
+              />
               <div className="flex items-center space-x-2">
                 {user ? (
                   <div className="flex items-center space-x-2">
