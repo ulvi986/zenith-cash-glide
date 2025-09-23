@@ -20,10 +20,10 @@ const RECENT_TRANSACTIONS = [
 ];
 
 const STATS = [
-  { title: 'Total Revenue', value: '716800', change: '', icon: () => <span className="text-lg font-bold">₼</span> },
-  { title: 'Sum of total transactions', value: '178600', change: '', icon: CreditCard },
+  { title: 'Total Revenue', value: '716800', change: '10.9%', icon: () => <span className="text-lg font-bold">₼</span> },
+  { title: 'Sum of total transactions', value: '178600', change: '20%', icon: CreditCard },
   { title: "Number of Transactions", value: '2345', change: '8.5%', icon: CreditCard },
-  {title: 'Card Number', value: '4169738823456723', change: '', icon: CreditCard },
+  {title: 'Card Number', value: '4169738823456723', change: '4.1%', icon: CreditCard },
 ];
 
 export function PaymentDashboard() {
