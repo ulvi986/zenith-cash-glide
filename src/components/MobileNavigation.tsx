@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -38,6 +39,7 @@ const QUICK_ACTIONS = [
 export function MobileNavigation() {
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   if (!isMobile) return null;
 
@@ -68,7 +70,12 @@ export function MobileNavigation() {
 
           <PaymentModal />
           
-          <Button variant="ghost" size="sm" className="flex flex-col items-center space-y-1 h-auto py-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex flex-col items-center space-y-1 h-auto py-2"
+            onClick={() => navigate('/history')}
+          >
             <History className="w-5 h-5" />
             <span className="text-xs">History</span>
           </Button>
