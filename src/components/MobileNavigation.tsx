@@ -15,7 +15,8 @@ import {
   QrCode,
   Send,
   Receipt,
-  History
+  History,
+  User
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PaymentModal } from '@/components/PaymentModal';
@@ -78,6 +79,16 @@ export function MobileNavigation() {
           >
             <History className="w-5 h-5" />
             <span className="text-xs">History</span>
+          </Button>
+
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex flex-col items-center space-y-1 h-auto py-2"
+            onClick={() => navigate('/profile')}
+          >
+            <User className="w-5 h-5" />
+            <span className="text-xs">Profile</span>
           </Button>
         </div>
       </div>
