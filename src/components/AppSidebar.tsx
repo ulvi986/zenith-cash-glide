@@ -20,7 +20,6 @@ import { Button } from '@/components/ui/button';
 const mainItems = [
   { title: 'Dashboard', url: '/', icon: Home },
   { title: 'History', url: '/history', icon: History },
-  { title: 'Profile', url: '/profile', icon: User },
 ];
 
 const quickActions = [

@@ -1,9 +1,9 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Bell, Search, User, LogOut } from 'lucide-react';
+import { Bell, Search, User } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ProfileDropdown } from './ProfileDropdown';
 
 interface DesktopHeaderProps {
   user?: { email: string; fullName: string } | null;
@@ -39,20 +39,7 @@ export function DesktopHeader({ user, onAuthClick, onLogout }: DesktopHeaderProp
               <p className="text-sm font-medium text-foreground">{user.fullName}</p>
               <p className="text-xs text-muted-foreground">{user.email}</p>
             </div>
-            <Avatar className="w-8 h-8">
-              <AvatarImage src="/placeholder-user.jpg" />
-              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                {user.fullName?.split(' ').map(n => n[0]).join('') || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={onLogout}
-              className="h-8 w-8 p-0"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
+            <ProfileDropdown user={user} onLogout={onLogout} />
           </div>
         ) : (
           <Button variant="outline" onClick={onAuthClick}>
