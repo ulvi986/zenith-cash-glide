@@ -11,6 +11,7 @@ import { AIVoiceButton } from './AIVoiceButton';
 import { AIChatbot } from './AIChatbot';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
+import {Link} from "react-router-dom";
 
 const RECENT_TRANSACTIONS = [
   { id: 1, type: 'income', amount: 2400, description: 'Payment received', time: '2 hours ago' },
@@ -30,8 +31,34 @@ export function PaymentDashboard() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [user, setUser] = useState<{ email: string; fullName: string } | null>(null);
   const isMobile = useIsMobile();
+  const [recentTransactions, setRecentTransactions] = useState<
+  { id: number; type: 'income' | 'expense'; amount: number; description: string; time: string }[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+
+useEffect(() => {
+  if (!user) return; // user yoxdursa fetch etmə
+
+  const fetchRecentTransactions = async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/recent-transactions?email=${user.email}`);
+      const data = await res.json();
+
+      // data array olmalıdır [{id, type, amount, description, time}, ...]
+      setRecentTransactions(data);
+    } catch (err) {
+      console.error("Recent transactions fetch error:", err);
+      toast.error("Could not load recent transactions");
+    }
+  };
   
 
+  fetchRecentTransactions();
+  //const intervalId = setInterval(fetchRecentTransactions, 1000); 
+  //return () => clearInterval(intervalId);
+}, [user,refreshKey]);
+
+//#region {*/useeffect methods to fetch data from backend*/}
 
 const [stats, setStats] = useState(STATS);
 
@@ -60,7 +87,7 @@ const [stats, setStats] = useState(STATS);
     //const intervalId = setInterval(fetchRevenue, 1000); 
     //return () => clearInterval(intervalId);
   }
-}, [user]);
+}, [user,refreshKey]);
 
 useEffect(() => {
   if (user) {
@@ -87,8 +114,7 @@ useEffect(() => {
     //const intervalId = setInterval(fetchTotalTransactions, 1000); 
     //return () => clearInterval(intervalId);
   }
-}, [user]);
-
+}, [user,refreshKey]);
 
 useEffect(() => {
   if (user) {
@@ -115,7 +141,7 @@ useEffect(() => {
     //const intervalId = setInterval(fetchTotalTransactionsCount, 1000); 
     //return () => clearInterval(intervalId);
   }
-}, [user]);
+}, [user,refreshKey]);
 
 
 useEffect(() => {
@@ -143,7 +169,16 @@ useEffect(() => {
   }
 }, [user]);
 
-  const handleAuthSuccess = (userData: { email: string; fullName: string }) => {
+
+//#endregion
+
+
+
+
+
+
+
+const handleAuthSuccess = (userData: { email: string; fullName: string }) => {
     setUser(userData);
   };
 
@@ -159,16 +194,20 @@ useEffect(() => {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-                  Reforger
+                  NeuroPayX
                 </h1>
               </div>
               <div className="flex items-center space-x-2">
                 {user ? (
                   <div className="flex items-center space-x-2">
                     <div className="text-right">
-                      <p className="text-sm font-medium">{user.fullName}</p>
+                      <Link to="/profile" className="text-sm font-medium hover:underline">
+                      {user.email}
+                      </Link>
                       <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
+                    
+                  
                     <Button 
                       variant="outline" 
                       size="sm"
@@ -210,7 +249,7 @@ useEffect(() => {
             <div className="text-center">
               <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl">
                 Modern Payment
-                <span className="block text-primary-glow">Reforger</span>
+                <span className="block text-primary-glow">NeuroPayX</span>
               </h1>
               <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/80">
                 Experience the future of payments with our secure, fast, and user-friendly platform.
@@ -261,7 +300,7 @@ useEffect(() => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {RECENT_TRANSACTIONS.map((transaction) => (
+                {recentTransactions.map((transaction) => (
                   <div
                     key={transaction.id}
                     className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border/30"
@@ -286,7 +325,7 @@ useEffect(() => {
                     <div className={`font-semibold ${
                       transaction.type === 'income' ? 'text-green-400' : 'text-red-400'
                     }`}>
-                      {transaction.type === 'income' ? '+' : '-'}${transaction.amount}
+                      {transaction.type === 'income' ? '+' : '-'}₼{transaction.amount}
                     </div>
                   </div>
                 ))}
@@ -348,6 +387,7 @@ useEffect(() => {
             </Card>
           </div>
         </div>
+        
 
         {/* Services Section */}
         <ServicesSection />
