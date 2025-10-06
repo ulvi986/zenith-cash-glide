@@ -427,7 +427,7 @@ const handleGoBack = () => {
             <Button variant="outline" className="w-full justify-start">
               Security Settings
             </Button>
-            <Button variant="outline" className="w-full justify-start">
+            <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/ai')}>
               AI predictions
             </Button>
             <Button variant="outline" className="w-full justify-start">
