@@ -378,6 +378,46 @@ const handleGoBack = () => {
           </CardContent>
         </Card>
 
+        {/* AI Financial Insights */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 8V4H8"/>
+                <rect width="16" height="12" x="4" y="8" rx="2"/>
+                <path d="M2 14h2"/>
+                <path d="M20 14h2"/>
+                <path d="M15 13v2"/>
+                <path d="M9 13v2"/>
+              </svg>
+              <span>AI Financial Insights</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
+              <h4 className="font-semibold text-foreground mb-2">💡 Spending Prediction</h4>
+              <p className="text-sm text-muted-foreground">
+                Based on your patterns, you're likely to spend ₼{Math.round(expenseData * 1.1)} next month. Consider setting aside extra savings.
+              </p>
+            </div>
+            <div className="p-4 bg-accent/10 rounded-lg border border-accent/20">
+              <h4 className="font-semibold text-foreground mb-2">📊 Savings Opportunity</h4>
+              <p className="text-sm text-muted-foreground">
+                You could save ₼{Math.round((incomeData - expenseData) * 0.2)} more by optimizing your monthly subscriptions.
+              </p>
+            </div>
+            <div className="p-4 bg-secondary/10 rounded-lg border border-secondary/20">
+              <h4 className="font-semibold text-foreground mb-2">🎯 Financial Goal</h4>
+              <p className="text-sm text-muted-foreground">
+                At your current saving rate, you'll reach your ₼10,000 goal in approximately 8 months.
+              </p>
+            </div>
+            <Button variant="outline" className="w-full">
+              Get More AI Insights
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Account Settings */}
         <Card>
           <CardHeader>
