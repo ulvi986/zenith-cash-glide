@@ -425,14 +425,14 @@ const handleGoBack = () => {
             <CardTitle>Account Settings</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
+            <Button variant="outline" className="w-full justify-start">
+              Make Payment
+            </Button>
             <AddBalanceModal>
               <Button variant="outline" className="w-full justify-start">
                 Add Balance
               </Button>
             </AddBalanceModal>
-            <Button variant="outline" className="w-full justify-start">
-              Make Payment
-            </Button>
             <Button variant="outline" className="w-full justify-start">
               Security Settings
             </Button>
