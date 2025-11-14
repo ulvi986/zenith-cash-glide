@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CreditCard, DollarSign, Lock, Smartphone } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
+import { AddBalanceModal } from '@/components/AddBalanceModal';
 
 const QUICK_AMOUNTS = [5, 10, 20, 50, 100];
 
@@ -200,31 +201,47 @@ export function PaymentModal() {
 
   if (isMobile) {
     return (
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button className="bg-payment-gradient hover:opacity-90 shadow-payment-glow">
-            <Smartphone className="w-4 h-4 mr-2" />
-            Make Payment
+      <div className="space-y-3">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button className="bg-payment-gradient hover:opacity-90 shadow-payment-glow">
+              <Smartphone className="w-4 h-4 mr-2" />
+              Make Payment
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[90vh] overflow-y-auto bg-background border-border">
+            <PaymentForm />
+          </SheetContent>
+        </Sheet>
+        <AddBalanceModal>
+          <Button variant="outline" className="w-full">
+            <CreditCard className="w-4 h-4 mr-2" />
+            Add Balance
           </Button>
-        </SheetTrigger>
-        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto bg-background border-border">
-          <PaymentForm />
-        </SheetContent>
-      </Sheet>
+        </AddBalanceModal>
+      </div>
     );
   }
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button className="bg-payment-gradient hover:opacity-90 shadow-payment-glow">
+    <div className="space-y-3">
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button className="bg-payment-gradient hover:opacity-90 shadow-payment-glow">
+            <CreditCard className="w-4 h-4 mr-2" />
+            Make Payment
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-md bg-background border-border">
+          <PaymentForm />
+        </DialogContent>
+      </Dialog>
+      <AddBalanceModal>
+        <Button variant="outline" className="w-full">
           <CreditCard className="w-4 h-4 mr-2" />
-          Make Payment
+          Add Balance
         </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-md bg-background border-border">
-        <PaymentForm />
-      </DialogContent>
-    </Dialog>
+      </AddBalanceModal>
+    </div>
   );
 }
