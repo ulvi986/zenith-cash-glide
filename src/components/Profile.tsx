@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ScatterChart, Scatter, Cell } from 'recharts';
 import { toast } from 'sonner';
+import { AddBalanceModal } from '@/components/AddBalanceModal';
 
 // Sample data for charts
 const EXPENSE_DATA = [
@@ -424,6 +425,14 @@ const handleGoBack = () => {
             <CardTitle>Account Settings</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
+            <AddBalanceModal>
+              <Button variant="outline" className="w-full justify-start">
+                Add Balance
+              </Button>
+            </AddBalanceModal>
+            <Button variant="outline" className="w-full justify-start">
+              Make Payment
+            </Button>
             <Button variant="outline" className="w-full justify-start">
               Security Settings
             </Button>
